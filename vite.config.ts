@@ -4,10 +4,11 @@ import honox from 'honox/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  server: { host: '0.0.0.0' },
   plugins: [
     honox({
       devServer: { adapter },
-      client: { input: ['/app/client.ts', '/app/style.css'] },
+      client: { input: ['/app/client.ts'] },
     }),
     build(),
   ],

@@ -2,6 +2,12 @@
 
 ブラウザカメラの映像からフレームを切り出し、Cloudflare Workers AI の Vision モデルで自動車ナンバープレートを認識する HonoX アプリです。
 
+## 公開 URL
+
+[https://plate-reader.shingo1551.workers.dev](https://plate-reader.shingo1551.workers.dev)
+
+iPhone では Safari で URL を開き、「カメラを起動」をタップしてカメラの使用を許可してください。
+
 ## 開発
 
 ```sh
