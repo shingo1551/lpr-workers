@@ -45,7 +45,7 @@ export default createRoute((c) => c.render(
         <div id="result-data" class="result-data" hidden>
           <span class="result-label">4-DIGIT NUMBER</span>
           <strong id="plate-number" class="plate-number">—</strong>
-          <div class="result-meta"><span>信頼度</span><span id="confidence">—</span></div>
+          <div class="result-meta"><span>読み取り方式</span><span id="confidence">—</span></div>
           <div class="result-meta"><span>最終更新</span><span id="last-seen">—</span></div>
         </div>
         <div class="result-footer"><span class="pulse-dot"></span><span id="scan-state">待機中</span></div>
@@ -66,8 +66,6 @@ export default createRoute((c) => c.render(
       let stream = null;
       let scanTimer = null;
       let busy = false;
-      let candidateDigits = '';
-      let candidateCount = 0;
 
       async function scanFrame() {
         if (!stream || busy || video.readyState < 2) return;
@@ -90,34 +88,15 @@ export default createRoute((c) => c.render(
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || '認識に失敗しました');
-          const modelOutput = data.result?.response ?? data.result;
-          const text = typeof modelOutput === 'string' ? modelOutput : JSON.stringify(modelOutput);
-          const match = text.match(/\\{[\\s\\S]*\\}/);
-          let parsed = null;
-          try { parsed = match ? JSON.parse(match[0]) : null; } catch {}
-          const digits = parsed?.digits && parsed.digits !== 'null' ? String(parsed.digits).replace(/\\D/g, '') : '';
-          if (/^\\d{4}$/.test(digits) && parsed?.confidence === 'high') {
-            if (digits === candidateDigits) candidateCount += 1;
-            else {
-              candidateDigits = digits;
-              candidateCount = 1;
-            }
-            if (candidateCount < 2) {
-              resultData.hidden = true;
-              resultContent.hidden = false;
-              document.getElementById('result-heading').textContent = '確認中';
-              scanState.textContent = '同じ数字をもう一度確認しています (1/2)';
-              return;
-            }
+          const digits = typeof data.digits === 'string' ? data.digits.replace(/\\D/g, '') : '';
+          if (/^\\d{4}$/.test(digits)) {
             document.getElementById('plate-number').textContent = digits;
-            document.getElementById('confidence').textContent = parsed.confidence || '—';
+            document.getElementById('confidence').textContent = 'OCR';
             document.getElementById('last-seen').textContent = new Date().toLocaleTimeString('ja-JP');
             resultContent.hidden = true;
             resultData.hidden = false;
-            scanState.textContent = '4桁を確認しました';
+            scanState.textContent = '4桁を読み取りました';
           } else {
-            candidateDigits = '';
-            candidateCount = 0;
             resultData.hidden = true;
             resultContent.hidden = false;
             document.getElementById('result-heading').textContent = '未認識';

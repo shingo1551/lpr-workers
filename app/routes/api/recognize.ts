@@ -3,7 +3,7 @@ import { createRoute } from 'honox/factory'
 type Env = { AI: Ai }
 
 const MAX_IMAGE_CHARS = 5_000_000
-const MODEL = '@cf/meta/llama-3.2-11b-vision-instruct'
+const MODEL = '@cf/moondream/moondream3.1-9B-A2B'
 
 export const POST = createRoute(async (c) => {
   let body: { image?: unknown }
@@ -22,17 +22,17 @@ export const POST = createRoute(async (c) => {
 
   try {
     const result = await (c.env as Env).AI.run(MODEL, {
-      prompt: [
-        '画像に写っている日本の自動車ナンバープレートから、一連指定番号の数字4桁だけを読み取ってください。',
-        'ハイフンは無視します。4桁すべてを画像からはっきり確認でき、各数字に自信がある場合だけ digits に4桁を設定してください。',
-        '1桁でも不鮮明、プレートがない、または少しでも迷う場合は digits を null、confidence を low にしてください。絶対に推測・補完せず、例の数字も返さないでください。',
-        '説明文を加えず、digits (4桁の文字列または null) と confidence (high, medium, low) を持つJSONオブジェクトだけを返してください。',
-      ].join('\n'),
+      task: 'query',
       image: body.image,
-      max_tokens: 120,
+      question: '日本の自動車ナンバープレートの一連指定番号にある数字4桁だけを読み取ってください。画像上で読める数字だけをそのまま返してください。4桁すべてを読み取れない場合は UNREADABLE とだけ返し、絶対に推測しないでください。',
+      reasoning: false,
+      max_tokens: 24,
       temperature: 0,
     })
-    return c.json({ result })
+    const answer = typeof result.answer === 'string' ? result.answer : ''
+    const match = answer.match(/(?:^|\D)(\d(?:[\s-]?\d){3})(?:\D|$)/)
+    const digits = match?.[1].replace(/\D/g, '')
+    return c.json({ digits: digits?.length === 4 ? digits : null })
   } catch (error) {
     console.error('Workers AI recognition failed', error)
     return c.json({ error: 'Vision AI の呼び出しに失敗しました。少し待ってから再度お試しください。' }, 502)
