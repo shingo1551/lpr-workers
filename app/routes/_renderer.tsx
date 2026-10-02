@@ -1,0 +1,15 @@
+import { jsxRenderer } from 'hono/jsx-renderer'
+import { Link } from 'honox/server'
+
+export default jsxRenderer(({ children, title }) => (
+  <html lang="ja">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="theme-color" content="#101719" />
+      <title>{title}</title>
+      <Link href="/app/style.css" rel="stylesheet" />
+    </head>
+    <body>{children}</body>
+  </html>
+))
