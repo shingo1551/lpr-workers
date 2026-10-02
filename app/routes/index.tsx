@@ -43,7 +43,7 @@ export default createRoute((c) => c.render(
           <span>カメラを起動すると<br />自動で認識を開始します</span>
         </div>
         <div id="result-data" class="result-data" hidden>
-          <span class="result-label">LICENSE PLATE</span>
+          <span class="result-label">4-DIGIT NUMBER</span>
           <strong id="plate-number" class="plate-number">—</strong>
           <div class="result-meta"><span>信頼度</span><span id="confidence">—</span></div>
           <div class="result-meta"><span>最終更新</span><span id="last-seen">—</span></div>
@@ -74,10 +74,14 @@ export default createRoute((c) => c.render(
         scanState.textContent = '画像を解析中';
         try {
           const canvas = document.createElement('canvas');
-          const scale = Math.min(1, 1280 / video.videoWidth);
-          canvas.width = Math.round(video.videoWidth * scale);
-          canvas.height = Math.round(video.videoHeight * scale);
-          canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+          const cropX = Math.round(video.videoWidth * 0.17);
+          const cropY = Math.round(video.videoHeight * 0.23);
+          const cropWidth = Math.round(video.videoWidth * 0.66);
+          const cropHeight = Math.round(video.videoHeight * 0.54);
+          const scale = Math.min(1, 1280 / cropWidth);
+          canvas.width = Math.round(cropWidth * scale);
+          canvas.height = Math.round(cropHeight * scale);
+          canvas.getContext('2d').drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
           const response = await fetch('/api/recognize', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
@@ -90,15 +94,15 @@ export default createRoute((c) => c.render(
           const match = text.match(/\\{[\\s\\S]*\\}/);
           let parsed = null;
           try { parsed = match ? JSON.parse(match[0]) : null; } catch {}
-          const plate = parsed?.plate && parsed.plate !== 'null' ? String(parsed.plate).trim() : '';
-          if (plate) {
-            document.getElementById('plate-number').textContent = plate;
+          const digits = parsed?.digits && parsed.digits !== 'null' ? String(parsed.digits).replace(/\\D/g, '') : '';
+          if (/^\\d{4}$/.test(digits)) {
+            document.getElementById('plate-number').textContent = digits;
             document.getElementById('confidence').textContent = parsed.confidence || '—';
             document.getElementById('last-seen').textContent = new Date().toLocaleTimeString('ja-JP');
             resultContent.hidden = true;
             resultData.hidden = false;
-            scanState.textContent = plate === previousPlate ? '認識中' : 'ナンバーを認識しました';
-            previousPlate = plate;
+            scanState.textContent = digits === previousPlate ? '認識中' : '4桁を認識しました';
+            previousPlate = digits;
           } else {
             scanState.textContent = 'ナンバーを探しています';
           }

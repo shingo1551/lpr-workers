@@ -23,10 +23,9 @@ export const POST = createRoute(async (c) => {
   try {
     const result = await (c.env as Env).AI.run(MODEL, {
       prompt: [
-        '画像に写っている自動車のナンバープレートを読み取ってください。',
-        '日本のナンバープレートを優先し、地名、分類番号、ひらがな、一連指定番号を正確に読み取ります。',
-        'プレートが見つからない、または判読できない場合は plate を null にします。',
-        '説明文や推測を加えず、次のJSONだけを返してください: {"plate":"品川 300 あ 12-34","confidence":"high|medium|low"}',
+        '画像に写っている日本の自動車ナンバープレートから、一連指定番号の数字4桁だけを読み取ってください。',
+        'ハイフンは無視して数字だけを返します。4桁すべてをはっきり確認できない場合は digits を null にし、推測で補わないでください。',
+        '説明文や推測を加えず、次のJSONだけを返してください: {"digits":"1234","confidence":"high|medium|low"}',
       ].join('\n'),
       image: body.image,
       max_tokens: 120,
