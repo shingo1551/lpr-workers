@@ -91,7 +91,7 @@ export default createRoute((c) => c.render(
           const digits = typeof data.digits === 'string' ? data.digits.replace(/\\D/g, '') : '';
           if (/^\\d{4}$/.test(digits)) {
             document.getElementById('plate-number').textContent = digits;
-            document.getElementById('confidence').textContent = 'OCR';
+            document.getElementById('confidence').textContent = 'Vision AI';
             document.getElementById('last-seen').textContent = new Date().toLocaleTimeString('ja-JP');
             resultContent.hidden = true;
             resultData.hidden = false;

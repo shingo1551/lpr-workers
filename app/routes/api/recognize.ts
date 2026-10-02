@@ -3,7 +3,7 @@ import { createRoute } from 'honox/factory'
 type Env = { AI: Ai }
 
 const MAX_IMAGE_CHARS = 5_000_000
-const MODEL = '@cf/moondream/moondream3.1-9B-A2B'
+const MODEL = '@cf/meta/llama-3.2-11b-vision-instruct'
 
 export const POST = createRoute(async (c) => {
   let body: { image?: unknown }
@@ -22,14 +22,18 @@ export const POST = createRoute(async (c) => {
 
   try {
     const result = await (c.env as Env).AI.run(MODEL, {
-      task: 'query',
+      prompt: [
+        '画像の日本の自動車ナンバープレートから、一連指定番号の数字4桁だけを読み取ってください。',
+        '画像で実際に確認できる数字だけを返し、ハイフンは除いてください。',
+        '4桁すべてが鮮明でない場合、または少しでも確信が持てない場合は UNREADABLE とだけ返してください。欠けた数字を推測・補完してはいけません。',
+        '例や説明は返さず、数字4桁または UNREADABLE のどちらかだけを返してください。',
+      ].join('\n'),
       image: body.image,
-      question: '日本の自動車ナンバープレートの一連指定番号にある数字4桁だけを読み取ってください。画像上で読める数字だけをそのまま返してください。4桁すべてを読み取れない場合は UNREADABLE とだけ返し、絶対に推測しないでください。',
-      reasoning: false,
-      max_tokens: 24,
+      max_tokens: 16,
       temperature: 0,
     })
-    const answer = typeof result.answer === 'string' ? result.answer : ''
+    const output = result.response ?? result
+    const answer = typeof output === 'string' ? output : JSON.stringify(output)
     const match = answer.match(/(?:^|\D)(\d(?:[\s-]?\d){3})(?:\D|$)/)
     const digits = match?.[1].replace(/\D/g, '')
     return c.json({ digits: digits?.length === 4 ? digits : null })

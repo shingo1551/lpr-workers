@@ -23,7 +23,7 @@ npm run dev
 npm run deploy
 ```
 
-`wrangler.jsonc` に Workers AI binding を設定済みです。初回利用時には Cloudflare ダッシュボードで Workers AI を有効にしてください。現在の Vision モデルは OCR 対応の `@cf/moondream/moondream3.1-9B-A2B` です。
+`wrangler.jsonc` に Workers AI binding を設定済みです。初回利用時には Cloudflare ダッシュボードで Workers AI を有効にしてください。現在の Vision モデルは `@cf/meta/llama-3.2-11b-vision-instruct` です。Meta のライセンス同意が求められる場合は、Cloudflare の案内に従ってモデルに `prompt: "agree"` を一度送ってください。
 
 ## 動作
 
