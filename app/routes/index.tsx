@@ -39,7 +39,7 @@ export default createRoute((c) => c.render(
         <div class="panel-heading"><span>認識結果</span><span class="ai-chip">AI</span></div>
         <div id="result-content" class="result-empty">
           <span class="result-glyph">▤</span>
-          <strong>読み取り待ち</strong>
+          <strong id="result-heading">読み取り待ち</strong>
           <span>カメラを起動すると<br />自動で認識を開始します</span>
         </div>
         <div id="result-data" class="result-data" hidden>
@@ -66,7 +66,8 @@ export default createRoute((c) => c.render(
       let stream = null;
       let scanTimer = null;
       let busy = false;
-      let previousPlate = '';
+      let candidateDigits = '';
+      let candidateCount = 0;
 
       async function scanFrame() {
         if (!stream || busy || video.readyState < 2) return;
@@ -95,16 +96,32 @@ export default createRoute((c) => c.render(
           let parsed = null;
           try { parsed = match ? JSON.parse(match[0]) : null; } catch {}
           const digits = parsed?.digits && parsed.digits !== 'null' ? String(parsed.digits).replace(/\\D/g, '') : '';
-          if (/^\\d{4}$/.test(digits)) {
+          if (/^\\d{4}$/.test(digits) && parsed?.confidence === 'high') {
+            if (digits === candidateDigits) candidateCount += 1;
+            else {
+              candidateDigits = digits;
+              candidateCount = 1;
+            }
+            if (candidateCount < 2) {
+              resultData.hidden = true;
+              resultContent.hidden = false;
+              document.getElementById('result-heading').textContent = '確認中';
+              scanState.textContent = '同じ数字をもう一度確認しています (1/2)';
+              return;
+            }
             document.getElementById('plate-number').textContent = digits;
             document.getElementById('confidence').textContent = parsed.confidence || '—';
             document.getElementById('last-seen').textContent = new Date().toLocaleTimeString('ja-JP');
             resultContent.hidden = true;
             resultData.hidden = false;
-            scanState.textContent = digits === previousPlate ? '認識中' : '4桁を認識しました';
-            previousPlate = digits;
+            scanState.textContent = '4桁を確認しました';
           } else {
-            scanState.textContent = 'ナンバーを探しています';
+            candidateDigits = '';
+            candidateCount = 0;
+            resultData.hidden = true;
+            resultContent.hidden = false;
+            document.getElementById('result-heading').textContent = '未認識';
+            scanState.textContent = '4桁をはっきり確認できません';
           }
         } catch (error) {
           scanState.textContent = error.message || '通信エラー';
