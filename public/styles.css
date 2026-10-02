@@ -4,3 +4,4 @@
 @media(max-width:760px){.shell{padding:0 20px}.topbar{height:70px}.intro{padding:43px 0 30px}.workspace{grid-template-columns:1fr}.video-wrap{height:min(65vw,340px);min-height:230px}.result-panel{min-height:260px}.result-data{padding:23px 20px}.plate-number{margin-bottom:18px}footer{gap:14px;flex-wrap:wrap}}
 .video-wrap.is-live .live-tag{opacity:1}
 [hidden]{display:none!important}
+.build-version{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:20;padding:5px 8px;border:1px solid #394640;border-radius:5px;background:#101719e8;color:#9eaca5;font:9px 'DM Mono',monospace;letter-spacing:.08em;pointer-events:none}
