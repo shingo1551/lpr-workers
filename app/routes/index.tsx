@@ -85,7 +85,8 @@ export default createRoute((c) => c.render(
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || '認識に失敗しました');
-          const text = typeof data.result === 'string' ? data.result : data.result?.response || JSON.stringify(data.result);
+          const modelOutput = data.result?.response ?? data.result;
+          const text = typeof modelOutput === 'string' ? modelOutput : JSON.stringify(modelOutput);
           const match = text.match(/\\{[\\s\\S]*\\}/);
           let parsed = null;
           try { parsed = match ? JSON.parse(match[0]) : null; } catch {}
