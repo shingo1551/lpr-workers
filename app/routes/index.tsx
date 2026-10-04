@@ -43,7 +43,7 @@ export default createRoute((c) => c.render(
           <span>カメラを起動すると<br />自動で認識を開始します</span>
         </div>
         <div id="result-data" class="result-data" hidden>
-          <span class="result-label">4-DIGIT NUMBER</span>
+          <span class="result-label">LICENSE PLATE</span>
           <strong id="plate-number" class="plate-number">—</strong>
           <div class="result-meta"><span>読み取り方式</span><span id="confidence">—</span></div>
           <div class="result-meta"><span>最終更新</span><span id="last-seen">—</span></div>
@@ -73,10 +73,18 @@ export default createRoute((c) => c.render(
         scanState.textContent = '画像を解析中';
         try {
           const canvas = document.createElement('canvas');
-          const cropX = Math.round(video.videoWidth * 0.17);
-          const cropY = Math.round(video.videoHeight * 0.23);
-          const cropWidth = Math.round(video.videoWidth * 0.66);
-          const cropHeight = Math.round(video.videoHeight * 0.54);
+          const frame = document.querySelector('.target-frame');
+          const videoRect = video.getBoundingClientRect();
+          const frameRect = frame.getBoundingClientRect();
+          const coverScale = Math.max(videoRect.width / video.videoWidth, videoRect.height / video.videoHeight);
+          const renderedWidth = video.videoWidth * coverScale;
+          const renderedHeight = video.videoHeight * coverScale;
+          const offsetX = (videoRect.width - renderedWidth) / 2;
+          const offsetY = (videoRect.height - renderedHeight) / 2;
+          const cropX = Math.max(0, Math.round((frameRect.left - videoRect.left - offsetX) / coverScale));
+          const cropY = Math.max(0, Math.round((frameRect.top - videoRect.top - offsetY) / coverScale));
+          const cropWidth = Math.min(video.videoWidth - cropX, Math.round(frameRect.width / coverScale));
+          const cropHeight = Math.min(video.videoHeight - cropY, Math.round(frameRect.height / coverScale));
           const scale = Math.min(1, 1280 / cropWidth);
           canvas.width = Math.round(cropWidth * scale);
           canvas.height = Math.round(cropHeight * scale);
@@ -88,19 +96,19 @@ export default createRoute((c) => c.render(
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || '認識に失敗しました');
-          const digits = typeof data.digits === 'string' ? data.digits.replace(/\\D/g, '') : '';
-          if (/^\\d{4}$/.test(digits)) {
-            document.getElementById('plate-number').textContent = digits;
+          const plateText = typeof data.plateText === 'string' ? data.plateText.trim() : '';
+          if (plateText) {
+            document.getElementById('plate-number').textContent = plateText;
             document.getElementById('confidence').textContent = 'Vision AI';
             document.getElementById('last-seen').textContent = new Date().toLocaleTimeString('ja-JP');
             resultContent.hidden = true;
             resultData.hidden = false;
-            scanState.textContent = '4桁を読み取りました';
+            scanState.textContent = 'ナンバーを読み取りました';
           } else {
             resultData.hidden = true;
             resultContent.hidden = false;
             document.getElementById('result-heading').textContent = '未認識';
-            scanState.textContent = '4桁をはっきり確認できません';
+            scanState.textContent = 'ナンバーをはっきり確認できません';
           }
         } catch (error) {
           scanState.textContent = error.message || '通信エラー';
